@@ -16,5 +16,5 @@ endif
 endif
 build:
 	for image in $(IMAGES) ; do \
-        docker build --tag $$image --file docker/$$image/Dockerfile ./docker/$(image); \
+        docker build --tag $$image --file docker/$$image/Dockerfile ./docker/$$image; \
     done
