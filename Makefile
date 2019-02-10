@@ -18,3 +18,8 @@ build:
 	for image in $(IMAGES) ; do \
         docker build --tag $$image --file docker/$$image/Dockerfile ./docker/$$image; \
     done
+publish: build
+	for image in $(IMAGES) ; do \
+		docker tag $$image tomasz2101/$$image:latest; \
+        docker push tomasz2101/$$image:latest; \
+    done
