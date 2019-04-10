@@ -14,11 +14,11 @@ else
 	lpass login $$user;
 endif
 endif
-build:
+docker_build:
 	for image in $(IMAGES) ; do \
         docker build --tag $$image --file docker/$$image/Dockerfile ./docker/$$image; \
     done
-publish: build
+docker_publish: build
 	for image in $(IMAGES) ; do \
 		docker tag $$image tomasz2101/$$image:latest; \
         docker push tomasz2101/$$image:latest; \
