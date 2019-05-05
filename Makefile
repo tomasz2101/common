@@ -22,9 +22,9 @@ endif # ifndef IMAGES
 SHELL = /bin/bash -e -o pipefail
 
 ## get information from version file
-VERSIONFILE := $(strip $(or $(wildcard ./test.yaml) $(wildcard ../test.yaml)))
+VERSIONFILE := $(strip $(or $(wildcard ./development.yaml) $(wildcard ../development.yaml)))
 ifneq (,${VERSIONFILE})
-include .make.env # Environment generated from test.yaml
+include .make.env # Environment generated from development.yaml
 .make.env: ${VERSIONFILE}
 	@sed -n \
 	    -e '1,$$s/ *#.*$$//g' \
