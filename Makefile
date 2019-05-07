@@ -41,23 +41,20 @@ USER.username ?= ${LOGNAME}
 
 
 ############################################################
-## TODO describe
+### lpass login to automate lpass ansible staff
+############################################################
 .PHONY: lpass_login
 ifeq ($(findstring Not,$(shell lpass status)),Not)
     RESULT=FALSE
 else
     RESULT=TRUE
 endif
-
-lpass_login:
+export LPASS_DISABLE_PINENTRY=1
+lpass:
 ifeq ($(RESULT),FALSE)
-ifeq ($(strip $(user)),)
-	read -p "Enter user:" user; \
-	lpass login $$user;
-else
-	lpass login $$user;
+	lpass login ${USER.email};
 endif
-endif
+
 #=============================================================
 #
 #                 Managing docker images
@@ -114,9 +111,7 @@ release:
 	@echo "You must define 'VERSION' to be able to release"
 endif # ifdef ZRELEASE
 
-RM = /bin/rm -f
-RM-r = /bin/rm -rf
-clean:
-	- ${RM} .*-built-*
-	- ${RM} .*-pushed
-	- ${RM} .*-released
+clean::
+	rm -rf .*-built-*
+	rm -rf .*-pushed
+	rm -rf .*-released
