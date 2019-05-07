@@ -3,6 +3,8 @@
 ## create a Makefile in top level of your service, configure
 ## it and include this makefile.
 ##
+## !!!! git config user.email "email@example.com"
+##
 ## Example:
 ##
 ## SERVICE = smurf
@@ -43,17 +45,21 @@ USER.username ?= ${LOGNAME}
 ############################################################
 ### lpass login to automate lpass ansible staff
 ############################################################
-.PHONY: lpass_login
+
+.PHONY: lpass
 ifeq ($(findstring Not,$(shell lpass status)),Not)
     RESULT=FALSE
 else
     RESULT=TRUE
 endif
+
 export LPASS_DISABLE_PINENTRY=1
 lpass:
 ifeq ($(RESULT),FALSE)
 	lpass login ${USER.email};
 endif
+lpass_logout:
+	lpass logout --force
 
 #=============================================================
 #
