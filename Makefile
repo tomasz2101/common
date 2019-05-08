@@ -79,43 +79,48 @@ ifndef DOCKERDIR
     $(error "Can't find docker directory. Please define 'IMAGEDIR'")
 endif # ifndef DOCKERDIR
 
+DOCKER.username = tomasz2101
 
+
+##############################################################
+## build
 .PHONY: build
 build: ${BUILDMARKERS}
 	### all is built
 ${BUILDMARKERS} : .%-built-${VERSION} :
-
-	docker build --tag $* --file ${IMAGEDIR}/$*/Dockerfile ./${IMAGEDIR}/$*; \
-
-	# for image in $(IMAGES) ; do \
-    #     docker build --tag $$image --file ${IMAGEDIR}/$$image/Dockerfile ./${IMAGEDIR}/$$image; \
-    # done
+	docker build --tag $* --file ${IMAGEDIR}/$*/Dockerfile ./${IMAGEDIR}/$*;
 	@touch $@
+
 ##############################################################
 ## push
 .PHONY: push
 push: ${PUSHMARKERS}
-	for image in $(IMAGES) ; do \
-		docker tag $$image tomasz2101/$$image:latest; \
-        docker push tomasz2101/$$image:latest; \
-    done
+	### all is pushed
+
+.PHONY: ${IMAGES:%=push-%}
+${IMAGES:%=push-%}: push-% : .%-pushed
+	### pushed $*
+
+${PUSHMARKERS}: .%-pushed : .%-built-${VERSION}
+	docker tag $* ${DOCKER.username}/$*:dev
+	docker push ${DOCKER.username}/$*:dev
 	@touch $@
 
+##############################################################
+## release
 ifdef VERSION
 .PHONY: release
 release: ${RELEASEMARKERS}
 
 ${RELEASEMARKERS}: .%-released : .%-built-${VERSION}
 	### Released all images as version ${VERSION}
-
-	for image in $(IMAGES) ; do \
-		docker tag $$image tomasz2101/$$image:${VERSION}; \
-        docker push tomasz2101/$$image:${VERSION}; \
-    done
-else # ifdef ZRELEASE
+	docker tag $* ${DOCKER.username}/$*:${VERSION}
+	docker push ${DOCKER.username}/$*:${VERSION}
+	@touch $@
+else # ifdef RELEASE
 release:
 	@echo "You must define 'VERSION' to be able to release"
-endif # ifdef ZRELEASE
+endif # ifdef RELEASE
 
 clean::
 	rm -rf .*-built-*
