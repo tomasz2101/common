@@ -4,6 +4,7 @@
 ## it and include this makefile.
 ##
 ## !!!! git config user.email "email@example.com"
+## !!!! git config user.name "user"
 ##
 ## Example:
 ##
@@ -39,9 +40,10 @@ TOPDIR = $(shell git rev-parse --show-toplevel)
 
 # information about user
 USER.email ?= $(strip $(shell git config --get user.email))
-USER.username ?= ${LOGNAME}
-
-
+USER.username ?= $(strip $(shell git config --get user.name))
+ifndef USER.email
+	$(warning "NOTE: ")
+endif # ifndef IMAGES
 ############################################################
 ### lpass login to automate lpass ansible staff
 ############################################################
@@ -52,7 +54,7 @@ ifeq ($(findstring Not,$(shell lpass status)),Not)
 else
     RESULT=TRUE
 endif
-
+# To disable lpass login pin entry / faster way of providing password
 export LPASS_DISABLE_PINENTRY=1
 lpass:
 ifeq ($(RESULT),FALSE)
@@ -79,13 +81,14 @@ ifndef DOCKERDIR
     $(error "Can't find docker directory. Please define 'IMAGEDIR'")
 endif # ifndef DOCKERDIR
 
-DOCKER.username = tomasz2101
 
 
 ##############################################################
 ## build
 .PHONY: build
 build: ${BUILDMARKERS}
+
+#TODO: how to take first part if path to create .images/XXX to have clean tree
 	### all is built
 ${BUILDMARKERS} : .%-built-${VERSION} :
 	docker build --tag $* --file ${IMAGEDIR}/$*/Dockerfile ./${IMAGEDIR}/$*;
@@ -102,8 +105,8 @@ ${IMAGES:%=push-%}: push-% : .%-pushed
 	### pushed $*
 
 ${PUSHMARKERS}: .%-pushed : .%-built-${VERSION}
-	docker tag $* ${DOCKER.username}/$*:dev
-	docker push ${DOCKER.username}/$*:dev
+	docker tag $* ${USER.username}/$*:dev
+	docker push ${USER.username}/$*:dev
 	@touch $@
 
 ##############################################################
@@ -114,8 +117,8 @@ release: ${RELEASEMARKERS}
 
 ${RELEASEMARKERS}: .%-released : .%-built-${VERSION}
 	### Released all images as version ${VERSION}
-	docker tag $* ${DOCKER.username}/$*:${VERSION}
-	docker push ${DOCKER.username}/$*:${VERSION}
+	docker tag $* ${USER.username}/$*:${VERSION}
+	docker push ${USER.username}/$*:${VERSION}
 	@touch $@
 else # ifdef RELEASE
 release:
