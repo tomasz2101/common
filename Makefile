@@ -23,12 +23,14 @@ endif # ifndef IMAGES
 ## Setup
 ############################################################
 SHELL = /bin/bash -e -o pipefail
-
+TEMP_DIR = .temp_dir
 ## get information from version file
 VERSIONFILE := $(strip $(or $(wildcard ./development.yaml) $(wildcard ../development.yaml)))
+
 ifneq (,${VERSIONFILE})
-include .make.env # Environment generated from development.yaml
-.make.env: ${VERSIONFILE}
+include ${TEMP_DIR}/make.env # Environment generated from development.yaml
+${TEMP_DIR}/make.env: ${VERSIONFILE}
+	@mkdir -p .temp_dir
 	@sed -n \
 	    -e '1,$$s/ *#.*$$//g' \
 	    -e '/^[ \t]*[A-Za-z][^ :]*[ :] *./s/^[ \t]*\([A-Za-z][^ :]*\)[ :] *\(..*\)/\1=\2/gp' \
@@ -69,10 +71,10 @@ lpass_logout:
 #
 #=============================================================
 
-BUILDMARKERS = ${IMAGES:%=.%-built-${VERSION}}
-PUSHMARKERS = ${IMAGES:%=.%-pushed}
-STAGEMARKERS = ${IMAGES:%=.%-staged}
-RELEASEMARKERS = ${IMAGES:%=.%-released}
+BUILDMARKERS = ${IMAGES:%=${TEMP_DIR}/%-built-${VERSION}}
+PUSHMARKERS = ${IMAGES:%=${TEMP_DIR}/%-pushed-${VERSION}}
+STAGEMARKERS = ${IMAGES:%=${TEMP_DIR}/%-staged-${VERSION}}
+RELEASEMARKERS = ${IMAGES:%=${TEMP_DIR}/%-released-${VERSION}}
 ## find out where docker files are
 ## (we expect dir to be called 'images' and reside in CWD or above)
 IMAGEDIR=images
@@ -88,9 +90,8 @@ endif # ifndef DOCKERDIR
 .PHONY: build
 build: ${BUILDMARKERS}
 
-#TODO: how to take first part if path to create .images/XXX to have clean tree
 	### all is built
-${BUILDMARKERS} : .%-built-${VERSION} :
+${BUILDMARKERS} : ${TEMP_DIR}/%-built-${VERSION} :
 	docker build --tag $* --file ${IMAGEDIR}/$*/Dockerfile ./${IMAGEDIR}/$*;
 	@touch $@
 
@@ -104,7 +105,7 @@ push: ${PUSHMARKERS}
 ${IMAGES:%=push-%}: push-% : .%-pushed
 	### pushed $*
 
-${PUSHMARKERS}: .%-pushed : .%-built-${VERSION}
+${PUSHMARKERS}: ${TEMP_DIR}/%-pushed-${VERSION} : ${TEMP_DIR}/%-built-${VERSION}
 	docker tag $* ${USER.username}/$*:dev
 	docker push ${USER.username}/$*:dev
 	@touch $@
@@ -115,7 +116,7 @@ ifdef VERSION
 .PHONY: release
 release: ${RELEASEMARKERS}
 
-${RELEASEMARKERS}: .%-released : .%-built-${VERSION}
+${RELEASEMARKERS}: ${TEMP_DIR}/%-released-${VERSION} : ${TEMP_DIR}/%-built-${VERSION}
 	### Released all images as version ${VERSION}
 	docker tag $* ${USER.username}/$*:${VERSION}
 	docker push ${USER.username}/$*:${VERSION}
@@ -124,8 +125,8 @@ else # ifdef RELEASE
 release:
 	@echo "You must define 'VERSION' to be able to release"
 endif # ifdef RELEASE
+##############################################################
+## help tasks
 
 clean::
-	rm -rf .*-built-*
-	rm -rf .*-pushed
-	rm -rf .*-released
+	rm -rf ${TEMP_DIR}
