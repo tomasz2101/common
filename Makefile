@@ -8,8 +8,7 @@
 ##
 ## Example:
 ##
-## SERVICE = smurf
-##  IMAGES = \
+##  IMAGES = \w
 ##
 ## include $(dir $(lastword ${MAKEFILE_LIST}))/tools/Makefile
 ##
@@ -64,6 +63,9 @@ ifeq ($(RESULT),FALSE)
 endif
 lpass_logout:
 	lpass logout --force
+
+docker_login:
+	docker login -u ${USER.username}
 
 #=============================================================
 #
