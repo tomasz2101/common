@@ -37,16 +37,29 @@ ${TEMP_DIR}/make.env: ${VERSIONFILE}
 else
 $(warning "NOTE: Create development.yaml file")
 endif # ifneq (,${VERSIONFILE})
-
+.PHONY: init_repo
+init_repo:
+	@read -p "Enter name:" user; \
+	git config user.name $$user;
+	@read -p "Enter mail:" mail; \
+	git config user.email $$mail;
 # where is top directory of service
 TOPDIR = $(shell git rev-parse --show-toplevel)
 
 # information about user
 USER.email ?= $(strip $(shell git config --get user.email))
 USER.username ?= $(strip $(shell git config --get user.name))
-ifndef USER.email
-	$(warning "NOTE: Please define user mail")
+
+check_user_name:
+ifeq (,${USER.username})
+	$(error "NOTE: Please define username, run: make init_repo")
 endif # ifndef IMAGES
+
+check_user_email:
+ifeq (,${USER.email})
+	$(error "NOTE: Please define user mail, run: make init_repo")
+endif # ifndef IMAGES
+
 ############################################################
 ### lpass login to automate lpass ansible staff
 ############################################################
@@ -59,14 +72,14 @@ else
 endif
 # To disable lpass login pin entry / faster way of providing password
 export LPASS_DISABLE_PINENTRY=1
-lpass:
+lpass: check_user_email
 ifeq ($(RESULT),FALSE)
 	lpass login ${USER.email};
 endif
 lpass_logout:
 	lpass logout --force
 
-docker_login:
+docker_login: check_user_name
 	docker login -u ${USER.username}
 
 #=============================================================
@@ -103,7 +116,7 @@ ${BUILDMARKERS} : ${TEMP_DIR}/%-built-${VERSION} :
 ##############################################################
 ## push
 .PHONY: push
-push: ${PUSHMARKERS}
+push: check_user_name ${PUSHMARKERS}
 	### all is pushed
 
 .PHONY: ${IMAGES:%=push-%}
@@ -119,7 +132,7 @@ ${PUSHMARKERS}: ${TEMP_DIR}/%-pushed-${VERSION} : ${TEMP_DIR}/%-built-${VERSION}
 ## release
 ifdef VERSION
 .PHONY: release
-release: ${RELEASEMARKERS}
+release: check_user_name ${RELEASEMARKERS}
 
 ${RELEASEMARKERS}: ${TEMP_DIR}/%-released-${VERSION} : ${TEMP_DIR}/%-built-${VERSION}
 	### Released all images as version ${VERSION}
