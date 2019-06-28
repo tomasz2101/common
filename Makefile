@@ -34,6 +34,8 @@ ${TEMP_DIR}/make.env: ${VERSIONFILE}
 	    -e '1,$$s/ *#.*$$//g' \
 	    -e '/^[ \t]*[A-Za-z][^ :]*[ :] *./s/^[ \t]*\([A-Za-z][^ :]*\)[ :] *\(..*\)/\1=\2/gp' \
 	    ${VERSIONFILE} > $@
+else
+$(warning "NOTE: Create development.yaml file")
 endif # ifneq (,${VERSIONFILE})
 
 # where is top directory of service
@@ -43,7 +45,7 @@ TOPDIR = $(shell git rev-parse --show-toplevel)
 USER.email ?= $(strip $(shell git config --get user.email))
 USER.username ?= $(strip $(shell git config --get user.name))
 ifndef USER.email
-	$(warning "NOTE: ")
+	$(warning "NOTE: Please define user mail")
 endif # ifndef IMAGES
 ############################################################
 ### lpass login to automate lpass ansible staff
@@ -94,6 +96,7 @@ build: ${BUILDMARKERS}
 
 	### all is built
 ${BUILDMARKERS} : ${TEMP_DIR}/%-built-${VERSION} :
+	@mkdir -p .temp_dir
 	docker build --tag $* --file ${IMAGEDIR}/$*/Dockerfile ./${IMAGEDIR}/$*;
 	@touch $@
 
