@@ -12,6 +12,7 @@
 ##
 ## include $(dir $(lastword ${MAKEFILE_LIST}))/tools/Makefile
 ##
+## to create secrets read secrets task
 ##### SEE Makefile.md for more information ########
 ############################################################
 ifndef IMAGES
@@ -82,6 +83,22 @@ lpass_logout:
 docker_login: check_user_name
 	docker login -u ${USER.username}
 
+############################################################
+### create secrets
+############################################################
+
+secrets: lpass
+	python3 tools/prepare_secrets.py --loglevel info --input_file ${DEPLOYMENT.secrets.template} --output_file ${DEPLOYMENT.secrets.output}
+
+############################################################
+### kubernetes helpers
+############################################################
+ports_forward:
+	/bin/sh -c 'kubectl port-forward ${K8S.service.name} ${K8S.service.port}:${K8S.service.port}'
+
+cluster_init:
+	kubectl create namespace ${K8S.namespace}
+
 #=============================================================
 #
 #                 Managing docker images
@@ -148,3 +165,4 @@ endif # ifdef RELEASE
 
 clean::
 	rm -rf ${TEMP_DIR}
+	rm -rf ${DEPLOYMENT.secrets.output}
