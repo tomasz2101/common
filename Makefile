@@ -25,10 +25,10 @@ endif # ifndef IMAGES
 SHELL = /bin/bash -e -o pipefail
 TEMP_DIR = .temp_dir
 ## get information from version file
-VERSIONFILE := $(strip $(or $(wildcard ./development.yaml) $(wildcard ../development.yaml)))
+VERSIONFILE := $(strip $(or $(wildcard ./services.yml) $(wildcard ../services.yml)))
 
 ifneq (,${VERSIONFILE})
-include ${TEMP_DIR}/make.env # Environment generated from development.yaml
+include ${TEMP_DIR}/make.env # Environment generated from services.yml
 ${TEMP_DIR}/make.env: ${VERSIONFILE}
 	@mkdir -p .temp_dir
 	@sed -n \
@@ -36,7 +36,7 @@ ${TEMP_DIR}/make.env: ${VERSIONFILE}
 	    -e '/^[ \t]*[A-Za-z][^ :]*[ :] *./s/^[ \t]*\([A-Za-z][^ :]*\)[ :] *\(..*\)/\1=\2/gp' \
 	    ${VERSIONFILE} > $@
 else
-$(warning "NOTE: Create development.yaml file")
+$(warning "NOTE: Create services.yml file")
 endif # ifneq (,${VERSIONFILE})
 .PHONY: init_repo
 init_repo:
