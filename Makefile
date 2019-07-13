@@ -87,8 +87,17 @@ docker_login: check_user_name
 ### create secrets
 ############################################################
 
-secrets: lpass
-	python3 tools/prepare_secrets.py --loglevel info --input_file ${DEPLOYMENT.secrets.template} --output_file ${DEPLOYMENT.secrets.output}
+# secrets: lpass
+# 	python3 tools/prepare_secrets.py --loglevel info --input_file ${DEPLOYMENT.secrets.template} --output_file ${DEPLOYMENT.secrets.output}
+
+# To create secrets please specify DEPLOYMENT.secrets = test.tmpl=test.secret test1.tmpl=test1.secret
+
+.PHONY: secrets
+secrets: lpass ${DEPLOYMENT.secrets}
+divide = $(word $2,$(subst =, ,$1))
+${DEPLOYMENT.secrets}: % :
+	python3 tools/prepare_secrets.py --loglevel info --input_file $(call divide,$*,1) --output_file $(call divide,$*,2)
+
 
 ############################################################
 ### kubernetes helpers
@@ -165,4 +174,5 @@ endif # ifdef RELEASE
 
 clean::
 	rm -rf ${TEMP_DIR}
-	rm -rf ${DEPLOYMENT.secrets.output}
+	$(foreach var,${DEPLOYMENT.secrets}, \
+		rm -rf  $(call divide,$(var),2);)
