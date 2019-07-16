@@ -39,7 +39,7 @@ else
 $(warning "NOTE: Create services.yml file")
 endif # ifneq (,${VERSIONFILE})
 .PHONY: init_repo
-init_repo:
+repo/init:
 	@read -p "Enter name:" user; \
 	git config user.name $$user;
 	@read -p "Enter mail:" mail; \
@@ -51,12 +51,12 @@ TOPDIR = $(shell git rev-parse --show-toplevel)
 USER.email ?= $(strip $(shell git config --get user.email))
 USER.username ?= $(strip $(shell git config --get user.name))
 
-check_user_name:
+user/name/check:
 ifeq (,${USER.username})
 	$(error "NOTE: Please define username, run: make init_repo")
 endif # ifndef IMAGES
 
-check_user_email:
+user/mail/check:
 ifeq (,${USER.email})
 	$(error "NOTE: Please define user mail, run: make init_repo")
 endif # ifndef IMAGES
@@ -73,14 +73,14 @@ else
 endif
 # To disable lpass login pin entry / faster way of providing password
 export LPASS_DISABLE_PINENTRY=1
-lpass: check_user_email
+lpass: user/mail/check
 ifeq ($(RESULT),FALSE)
 	lpass login ${USER.email};
 endif
-lpass_logout:
+lpass/logout:
 	lpass logout --force
 
-docker_login: check_user_name
+docker/login: user/name/check
 	docker login -u ${USER.username}
 
 ############################################################
@@ -102,10 +102,10 @@ ${DEPLOYMENT.secrets}: % :
 ############################################################
 ### kubernetes helpers
 ############################################################
-ports_forward:
+ports/forward:
 	/bin/sh -c 'kubectl port-forward ${K8S.service.name} ${K8S.service.port}:${K8S.service.port}'
 
-cluster_init:
+cluster/init:
 	kubectl create namespace ${K8S.namespace}
 
 #=============================================================
@@ -142,7 +142,7 @@ ${BUILDMARKERS} : ${TEMP_DIR}/%-built-${VERSION} :
 ##############################################################
 ## push
 .PHONY: push
-push: check_user_name ${PUSHMARKERS}
+push: user/name/check ${PUSHMARKERS}
 	### all is pushed
 
 .PHONY: ${IMAGES:%=push-%}
@@ -158,7 +158,7 @@ ${PUSHMARKERS}: ${TEMP_DIR}/%-pushed-${VERSION} : ${TEMP_DIR}/%-built-${VERSION}
 ## release
 ifdef VERSION
 .PHONY: release
-release: check_user_name ${RELEASEMARKERS}
+release: user/name/check ${RELEASEMARKERS}
 
 ${RELEASEMARKERS}: ${TEMP_DIR}/%-released-${VERSION} : ${TEMP_DIR}/%-built-${VERSION}
 	### Released all images as version ${VERSION}
