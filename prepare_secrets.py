@@ -80,7 +80,7 @@ def main(*args):
             line = line.replace('\n', '')
             m = re.search('{{ lookup\(\'lastpass1\', \'(.+?)\', field=\'(.+?)\'\) }}', line)
             if m:
-                logging.info('Getting {name} -> {key}'.format(name=m.group(1), key=m.group(2)))
+                logging.debug('Getting {name} -> {key}'.format(name=m.group(1), key=m.group(2)))
                 secret = lp.get_field(m.group(1), m.group(2))
                 line = line.replace(m.group(0), secret).replace('\n', '')
 

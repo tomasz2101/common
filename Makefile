@@ -102,10 +102,11 @@ ${DEPLOYMENT.secrets}: % :
 ############################################################
 ### kubernetes helpers
 ############################################################
-ports/forward:
+k8s/ports:
 	/bin/sh -c 'kubectl port-forward ${K8S.service.name} ${K8S.service.port}:${K8S.service.port}'
-
-cluster/init:
+k8s/namespace:
+	kubectl config set-context --current --namespace=${K8S.namespace}
+k8s/namespace/init:
 	kubectl create namespace ${K8S.namespace}
 
 #=============================================================
