@@ -137,7 +137,7 @@ build: ${BUILDMARKERS}
 	### all is built
 ${BUILDMARKERS} : ${TEMP_DIR}/%-built-${VERSION} :
 	@mkdir -p .temp_dir
-	docker build --tag $* --file ${IMAGEDIR}/$*/Dockerfile ./${IMAGEDIR}/$*;
+	docker build --tag $* --file ${IMAGEDIR}/$*/Dockerfile ./${IMAGEDIR};
 	@touch $@
 
 ##############################################################
