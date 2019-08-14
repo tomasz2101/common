@@ -1,2 +1,11 @@
-/__pycache__
+#IDE
 .idea
+.DS_Store
+.history
+.vscode
+
+#makefile
+.temp_dir
+*.secret
+
+.env
