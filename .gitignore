@@ -1,11 +1,17 @@
-#IDE
+# IDE
 .idea
 .DS_Store
 .history
 .vscode
 
-#makefile
+# Makefile
 .temp_dir
 *.secret
+.*-built-*
+.*-released-*
+.make.env
 
+
+# Development
 .env
+__pycache__
