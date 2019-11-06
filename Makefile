@@ -38,7 +38,7 @@ ${TEMP_DIR}/make.env: ${VERSIONFILE}
 else
 $(warning "NOTE: Create services.yml file")
 endif # ifneq (,${VERSIONFILE})
-.PHONY: init_repo
+.PHONY: repo/init
 repo/init:
 	@read -p "Enter name:" user; \
 	git config user.name $$user;
@@ -53,12 +53,12 @@ USER.username ?= $(strip $(shell git config --get user.name))
 
 user/name/check:
 ifeq (,${USER.username})
-	$(error "NOTE: Please define username, run: make init_repo")
+	$(error "NOTE: Please define username, run: make repo/init")
 endif # ifndef IMAGES
 
 user/mail/check:
 ifeq (,${USER.email})
-	$(error "NOTE: Please define user mail, run: make init_repo")
+	$(error "NOTE: Please define user mail, run: make repo/init")
 endif # ifndef IMAGES
 
 ############################################################
@@ -137,7 +137,7 @@ build: ${BUILDMARKERS}
 	### all is built
 ${BUILDMARKERS} : ${TEMP_DIR}/%-built-${VERSION} :
 	@mkdir -p .temp_dir
-	docker build --tag $* --file ${IMAGEDIR}/$*/Dockerfile ./${IMAGEDIR};
+	docker build --tag $* --file ${IMAGEDIR}/$*/Dockerfile .;
 	@touch $@
 
 ##############################################################
