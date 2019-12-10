@@ -6,7 +6,8 @@ RUN apt-get update \
     curl \
     gnupg-agent \
     software-properties-common \
-    git
+    git \
+    make
 
 RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 
@@ -18,3 +19,5 @@ RUN add-apt-repository \
 RUN apt-get -y install docker-ce  \
     docker-ce-cli \
     containerd.io
+
+ENV DOCKER_CLI_EXPERIMENTAL=enabled
