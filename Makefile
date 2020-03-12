@@ -22,8 +22,11 @@ endif # ifndef IMAGES
 ############################################################
 ## Setup
 ############################################################
+.DEFAULT_GOAL := build
+
 SHELL = /bin/bash -e -o pipefail
 TEMP_DIR = .temp_dir
+
 ## get information from version file
 VERSIONFILE := $(strip $(or $(wildcard ./services.yml) $(wildcard ../services.yml)))
 
@@ -38,8 +41,8 @@ ${TEMP_DIR}/make.env: ${VERSIONFILE}
 else
 $(warning "NOTE: Create services.yml file")
 endif # ifneq (,${VERSIONFILE})
-.PHONY: repo/init
-repo/init:
+.PHONY: repo.init
+repo.init:
 	@read -p "Enter name:" user; \
 	git config user.name $$user;
 	@read -p "Enter mail:" mail; \
@@ -51,12 +54,12 @@ TOPDIR = $(shell git rev-parse --show-toplevel)
 USER.email ?= $(strip $(shell git config --get user.email))
 USER.username ?= $(strip $(shell git config --get user.name))
 
-user/name/check:
+username.check:
 ifeq (,${USER.username})
 	$(error "NOTE: Please define username, run: make repo/init")
 endif # ifndef IMAGES
 
-user/mail/check:
+usermail.check:
 ifeq (,${USER.email})
 	$(error "NOTE: Please define user mail, run: make repo/init")
 endif # ifndef IMAGES
@@ -77,10 +80,10 @@ lpass: user/mail/check
 ifeq ($(RESULT),FALSE)
 	lpass login ${USER.email};
 endif
-lpass/logout:
+lpass.logout:
 	lpass logout --force
 
-docker/login: user/name/check
+docker.login: username.check
 	docker login -u ${USER.username}
 
 ############################################################
@@ -102,11 +105,11 @@ ${DEPLOYMENT.secrets}: % :
 ############################################################
 ### kubernetes helpers
 ############################################################
-k8s/ports:
+k8s.ports:
 	/bin/sh -c 'kubectl port-forward ${K8S.service.name} ${K8S.service.port}:${K8S.service.port}'
-k8s/namespace:
+k8s.namespace:
 	kubectl config set-context --current --namespace=${K8S.namespace}
-k8s/namespace/init:
+k8s.namespace.init:
 	kubectl create namespace ${K8S.namespace}
 
 #=============================================================
@@ -127,7 +130,20 @@ ifndef DOCKERDIR
     $(error "Can't find docker directory. Please define 'IMAGEDIR'")
 endif # ifndef DOCKERDIR
 
+## Image details per image
+define _set-image-details # <image-name>
+DOCKER.${1}.latest = ${1}:latest
+DOCKER.${1}.dev = ${1}:dev
+DOCKER.${1}.stage = ${1}:stage.${VERSION}
+DOCKER.${1}.release = ${1}:${VERSION}
+DOCKER.${1}.dockerfile = ${DOCKERDIR}/${1}.docker/Dockerfile
+# Which of these is best? We can have both, but a better name would be the image
+DOCKER.${1}.DEPEND = .${1}-built-${VERSION}
+${SERVICE}.${1}.DEPEND = .${1}-built-${VERSION}
+endef # define _set-image-details
 
+# create all variables for all images
+$(foreach img,${IMAGES},$(eval $(call _set-image-details,$(strip ${img}))))
 
 ##############################################################
 ## build
@@ -135,15 +151,15 @@ endif # ifndef DOCKERDIR
 build: ${BUILDMARKERS}
 
 	### all is built
-${BUILDMARKERS} : ${TEMP_DIR}/%-built-${VERSION} :
+${BUILDMARKERS} : ${TEMP_DIR}/%-built-${VERSION} : $(shell find images -type f)
 	@mkdir -p .temp_dir
-	docker build --tag $* --file ${IMAGEDIR}/$*/Dockerfile .;
+	docker build --tag "${USER.username}/${DOCKER.$*.latest}" --file "${DOCKER.$*.dockerfile}" "${DOCKERDIR}"
 	@touch $@
 
 ##############################################################
 ## push
 .PHONY: push
-push: user/name/check ${PUSHMARKERS}
+push: username.check ${PUSHMARKERS}
 	### all is pushed
 
 .PHONY: ${IMAGES:%=push-%}
@@ -151,7 +167,7 @@ ${IMAGES:%=push-%}: push-% : .%-pushed
 	### pushed $*
 
 ${PUSHMARKERS}: ${TEMP_DIR}/%-pushed-${VERSION} : ${TEMP_DIR}/%-built-${VERSION}
-	docker tag $* ${USER.username}/$*:dev
+	docker tag "${USER.username}/${DOCKER.$*.latest}" ${USER.username}/$*:dev
 	docker push ${USER.username}/$*:dev
 	@touch $@
 
@@ -159,12 +175,12 @@ ${PUSHMARKERS}: ${TEMP_DIR}/%-pushed-${VERSION} : ${TEMP_DIR}/%-built-${VERSION}
 ## release
 ifdef VERSION
 .PHONY: release
-release: user/name/check ${RELEASEMARKERS}
+release: username.check ${RELEASEMARKERS}
 
 ${RELEASEMARKERS}: ${TEMP_DIR}/%-released-${VERSION} : ${TEMP_DIR}/%-built-${VERSION}
 	### Released all images as version ${VERSION}
-	docker tag $* ${USER.username}/$*:${VERSION}
-	docker push ${USER.username}/$*:${VERSION}
+	docker tag "${USER.username}/${DOCKER.$*.latest}" "${USER.username}/${DOCKER.$*.release}"
+	docker push "${USER.username}/${DOCKER.$*.release}"
 	@touch $@
 else # ifdef RELEASE
 release:
