@@ -1,0 +1,14 @@
+---
+dependencies:
+  - role: users
+    tags: users
+
+  - role: additional_packages
+    tags: additional_packages
+  - role: timezone
+    tags: timezone
+  - role: pip
+    tags: pip
+  - role: docker
+    tags: docker
+  

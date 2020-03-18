@@ -1,0 +1,19 @@
+- name: Install pips
+  apt:
+    autoremove: yes
+    name: 
+      - python-pip
+      - python3-pip
+
+- name: Install pip dependecies
+  pip:
+    executable: pip3
+    state: latest
+    name: 
+      - setuptools
+- name: Install pip dependecies
+  pip:
+    state: latest
+    name: 
+      - setuptools
+    

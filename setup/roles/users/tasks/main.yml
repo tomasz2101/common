@@ -1,0 +1,63 @@
+
+---
+
+- name: Make sure NOPASSWD for sudo
+  lineinfile: 
+    dest: /etc/sudoers 
+    state: present 
+    regexp: '^%sudo' 
+    line: '%sudo ALL=(ALL) NOPASSWD: ALL'
+  register: nopasswd
+
+- name: Add users
+  user:
+    name: "{{ item.name }}"
+    shell: "/bin/bash"
+    generate_ssh_key: no
+    groups: 
+       - sudo
+    append: yes
+  loop: "{{ ADMIN_USERS }}"
+  register: users
+
+
+- name: Add keys for users to login, removing all the authorized key already set
+  authorized_key:
+    user: "{{ item.name }}"
+    state: present
+    exclusive: True
+    key: "{{ item.public_key }}"
+  loop: "{{ ADMIN_USERS }}"
+  register: authorized_keys
+
+- name: Disable empty password login
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    regexp: "^#?PermitEmptyPasswords"
+    line: "PermitEmptyPasswords no"
+  register: empty_password
+
+- name: Disable remote root login
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    regexp: "^#?PermitRootLogin"
+    line: "PermitRootLogin no"
+  register: root_login
+
+- name: Enable PAM
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    regexp: "^#?UsePAM"
+    line: "UsePAM yes"
+  register: pam
+
+- name: restart sshd
+  service: 
+    name: ssh 
+    state: restarted
+  when: nopasswd.changed or
+    users.changed or
+    authorized_keys.changed or
+    empty_password.changed or
+    root_login.changed or
+    pam.changed
