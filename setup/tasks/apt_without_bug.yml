@@ -1,0 +1,56 @@
+# -*- mode: yaml -*-
+# vi: set ft=yaml sw=2 :
+---
+
+- name: (Packages) {{ name }}
+  become: true
+  apt:
+    autoremove="{{ autoremove | default('yes') }}"
+    cache_valid_time="{{ cache_valid_time | default('1200') }}"
+    name={{item}}
+    state="{{ state | default('latest') }}"
+    update_cache="{{ update_cache | default('yes') }}"
+  with_items: "{{ packages | default([]) }}"
+  register: update_response
+  until: update_response is success
+  retries: 3
+  delay: 1
+  ignore_errors: yes
+  when: packages | default('')
+
+- name: (Upgrade) {{ name }}
+  become: true
+  apt:
+    autoclean="{{ autoclean | default('yes') }}"
+    autoremove="{{ autoremove | default('yes') }}"
+    cache_valid_time="{{ cache_valid_time | default('1200') }}"
+    state="{{ state | default('latest') }}"
+    update_cache="{{ update_cache | default('yes') }}"
+    upgrade="{{ upgrade | default('no') }}"
+  register: upgrade_response
+  until: upgrade_response is success
+  retries: 3
+  delay: 1
+  ignore_errors: yes
+  when: upgrade | default('')
+
+- name: (Deb) {{ name }}
+  become: true
+  apt:
+    autoclean="{{ autoclean | default('yes') }}"
+    autoremove="{{ autoremove | default('yes') }}"
+    cache_valid_time="{{ cache_valid_time | default('1200') }}"
+    state="{{ state | default('latest') }}"
+    update_cache="{{ update_cache | default('yes') }}"
+    deb="{{ deb}}"
+  register: deb_response
+  until: deb_response is success
+  retries: 3
+  delay: 1
+  ignore_errors: yes
+  when: deb | default('')
+
+- name: retry if needed using command apt-get update
+  become: yes
+  command: apt-get update
+  when: upgrade_response is failed or update_response is failed or deb_response is failed

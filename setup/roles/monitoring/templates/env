@@ -1,0 +1,7 @@
+GRAFANA_IMAGE=grafana/grafana:5.0.0
+PROMETHEUS_IMAGE=prom/prometheus:0.18.0
+NODE_EXPORTER_IMAGE=prom/node-exporter:v0.16.0
+GRAFANA_DATA={{ grafana_directory }}
+PROMETHEUS_DATA={{ prometheus_directory }}
+
+GRAFANA_PASSWORD={{ grafana_password }}

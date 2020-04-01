@@ -1,0 +1,32 @@
+---
+
+- name: Download docker install script
+  become: true
+  get_url:
+    url: https://get.docker.com
+    dest: /home/tom/docker-install.sh
+    mode: "a+x"
+
+- name: Check that the somefile.conf exists
+  stat:
+    path: /home/tom/docker_exists.txt
+  register: stat_result
+
+- name: Run install script
+  become: true
+  shell: /bin/sh /home/tom/docker-install.sh
+  when: stat_result.stat.exists == False
+
+- name: Create the file, if it doesnt exist already
+  file:
+    path: /home/tom/docker_exists.txt
+    state: touch
+
+- name: Set Docker to auto-start
+  become: true
+  service: name=docker enabled=true state=started
+
+- name: Install docker compose
+  become: true
+  pip:
+    name: docker-compose

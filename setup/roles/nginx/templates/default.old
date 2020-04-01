@@ -1,0 +1,87 @@
+server {
+    listen  80;
+    server_name {{ page_url }} www.{{ page_url }};
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen  80;
+    server_name *.{{ page_url }};
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+error_page  404  /404.html;
+
+# TODO: fix me
+
+
+server {
+    listen 443 ssl;
+    server_name {{ homeassistant_subdomain }}.{{ page_url }} www.{{ homeassistant_subdomain }}.{{ page_url }};
+    ssl_certificate /etc/letsencrypt/live/{{ homeassistant_subdomain }}.{{ page_url }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{ homeassistant_subdomain }}.{{ page_url }}/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+    location / {
+        proxy_pass http://{{local_ip}}:{{ homeassistant_port }};
+        proxy_set_header Host $host;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+   location /api/websocket {
+        proxy_pass http://{{local_ip}}:{{ homeassistant_port }}/api/websocket;
+        proxy_set_header Host $host;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+
+server {
+    listen 443 ssl;
+    server_name {{ blackmirror_subdomain }}.{{ page_url }} www.{{ blackmirror_subdomain }}.{{ page_url }};
+    ssl_certificate /etc/letsencrypt/live/{{ blackmirror_subdomain }}.{{ page_url }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{ blackmirror_subdomain }}.{{ page_url }}/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+    location / {
+        proxy_pass http://{{local_ip}}:{{ blackmirror_port }};
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+
+
+server {
+    listen 443 ssl;
+    server_name {{ nextcloud_subdomain }}.{{ page_url }} www.{{ nextcloud_subdomain }}.{{ page_url }};
+    ssl_certificate /etc/letsencrypt/live/{{ nextcloud_subdomain }}.{{ page_url }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{ nextcloud_subdomain }}.{{ page_url }}/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+    client_max_body_size 10G;
+    add_header Strict-Transport-Security "max-age=15552000; includeSubDomains" always;
+    location / {
+        proxy_pass http://{{local_ip}}:{{ nextcloud_port }};
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+

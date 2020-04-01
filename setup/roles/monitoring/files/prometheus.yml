@@ -1,0 +1,11 @@
+global:
+    scrape_interval: 5s
+    external_labels:
+        monitor: 'my-monitor'
+scrape_configs:
+    - job_name: 'prometheus'
+      target_groups:
+          - targets: ['localhost:9090']
+    - job_name: 'monitoring_node-exporter_1'
+      target_groups:
+          - targets: ['monitoring_node-exporter_1:9100']

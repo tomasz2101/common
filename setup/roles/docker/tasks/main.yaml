@@ -1,0 +1,15 @@
+---
+- include_tasks: ubuntu.yaml
+  when: ansible_distribution == 'Ubuntu'
+
+- include_tasks: rpi.yaml
+  when: distribution is defined and distribution == 'raspbian'
+
+- name: Add tom user to docker group
+  become: true
+  user:
+    append: yes
+    name: "{{ item }}"
+    groups: docker
+  with_items:
+    - tom

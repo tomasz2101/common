@@ -1,0 +1,6 @@
+github_url: 'https://github.com/tomasz2101/monitoring.git'
+application_directory: "{{ services_directory }}/monitoring"
+application_backup_directory: "{{ backups_directory }}/monitoring"
+
+grafana_directory: "{{ services_directory }}/grafana"
+prometheus_directory: "{{ services_directory }}/prometheus"

@@ -1,0 +1,3 @@
+git_url: 'git@github.com:tomasz2101/nginx.git'
+application_directory: "{{ services_directory }}/nginx"
+application_backup_directory: "{{ backups_directory }}/nginx"

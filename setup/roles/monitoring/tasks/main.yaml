@@ -1,0 +1,45 @@
+---
+
+- name: Create monitoring directory structure
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ admin_user }}"
+  with_items:
+    - "{{ application_backup_directory }}"
+    - "{{ application_directory }}"
+
+- name: Checkout monitoring repository
+  git:
+    force: yes
+    repo: "{{ github_url }}"
+    dest: "{{ application_directory }}"
+
+- name: Copy .env configuration
+  template:
+    src: env
+    dest: "{{ application_directory }}/.env"
+
+- name: Copy prometheus configuration
+  copy:
+    src: prometheus.yml
+    dest: "{{ application_directory }}/prometheus.yml"
+
+- name: Set ownership
+  file:
+    dest: "{{ item }}"
+    owner: "{{ admin_user }}"
+    group: "{{ admin_user }}"
+    recurse: yes
+  with_items:
+    - "{{ application_backup_directory }}"
+    - "{{ application_directory }}"
+
+- name: Increase memory areas vm.max_map_count
+  shell: sysctl -w vm.max_map_count=262144
+
+- name: Running docker-compose up -d
+  docker_compose:
+    project_src: "{{ application_directory }}"
+    restarted: true
+  register: output

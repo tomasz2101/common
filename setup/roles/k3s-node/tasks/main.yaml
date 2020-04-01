@@ -1,0 +1,6 @@
+---
+# - include_tasks: ubuntu.yaml
+#   when: ansible_distribution == 'Ubuntu'
+
+- include_tasks: rpi.yaml
+  when: distribution is defined and distribution == 'rpi'

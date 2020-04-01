@@ -168,6 +168,7 @@ ${IMAGES:%=push-%}: push-% : .%-pushed
 
 ${PUSHMARKERS}: ${TEMP_DIR}/%-pushed-${VERSION} : ${TEMP_DIR}/%-built-${VERSION}
 	docker tag "${USER.username}/${DOCKER.$*.latest}" ${USER.username}/$*:dev
+	docker push ${USER.username}/$*:latest
 	docker push ${USER.username}/$*:dev
 	@touch $@
 
@@ -180,6 +181,7 @@ release: username.check ${RELEASEMARKERS}
 ${RELEASEMARKERS}: ${TEMP_DIR}/%-released-${VERSION} : ${TEMP_DIR}/%-built-${VERSION}
 	### Released all images as version ${VERSION}
 	docker tag "${USER.username}/${DOCKER.$*.latest}" "${USER.username}/${DOCKER.$*.release}"
+	docker push ${USER.username}/$*:latest
 	docker push "${USER.username}/${DOCKER.$*.release}"
 	@touch $@
 else # ifdef RELEASE

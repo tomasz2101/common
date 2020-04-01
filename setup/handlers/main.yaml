@@ -1,0 +1,12 @@
+---
+
+- name: restart sshd
+  become: true
+  service: name=ssh state=restarted
+
+- name: restart docker
+  service: name=docker state=restarted
+
+- name: restart_openvpn
+  become: yes
+  service: name=openvpn state=restarted
