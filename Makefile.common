@@ -68,23 +68,23 @@ endif # ifndef IMAGES
 ### lpass login to automate lpass ansible staff
 ############################################################
 
-.PHONY: lpass
-ifeq ($(findstring Not,$(shell lpass status)),Not)
-    RESULT=FALSE
-else
-    RESULT=TRUE
-endif
-# To disable lpass login pin entry / faster way of providing password
-export LPASS_DISABLE_PINENTRY=1
-lpass: user/mail/check
-ifeq ($(RESULT),FALSE)
-	lpass login ${USER.email};
-endif
-lpass.logout:
-	lpass logout --force
+# .PHONY: lpass
+# ifeq ($(findstring Not,$(shell lpass status)),Not)
+#     RESULT=FALSE
+# else
+#     RESULT=TRUE
+# endif
+# # To disable lpass login pin entry / faster way of providing password
+# export LPASS_DISABLE_PINENTRY=1
+# lpass: user/mail/check
+# ifeq ($(RESULT),FALSE)
+# 	lpass login ${USER.email};
+# endif
+# lpass.logout:
+# 	lpass logout --force
 
-docker.login: username.check
-	docker login -u ${USER.username}
+# docker.login: username.check
+# 	docker login -u ${USER.username}
 
 ############################################################
 ### create secrets
